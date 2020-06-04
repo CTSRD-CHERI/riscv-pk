@@ -2,7 +2,6 @@
 
 #include "string.h"
 #include <stdint.h>
-// #include <ctype.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
 // Don't let GCC pattern-match these functions' bodies into self-calls
