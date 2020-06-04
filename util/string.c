@@ -1,15 +1,15 @@
 // See LICENSE for license details.
 
-#include <string.h>
+#include "string.h"
 #include <stdint.h>
-#include <ctype.h>
+// #include <ctype.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
 // Don't let GCC pattern-match these functions' bodies into self-calls
 #pragma GCC optimize ("no-tree-loop-distribute-patterns")
 #endif
 
-void* memcpy(void* dest, const void* src, size_t len)
+void* (memcpy)(void* dest, const void* src, size_t len)
 {
   const char* s = src;
   char *d = dest;
@@ -40,7 +40,7 @@ void* memcpy(void* dest, const void* src, size_t len)
   return dest;
 }
 
-void* memset(void* dest, int byte, size_t len)
+void* (memset)(void* dest, int byte, size_t len)
 {
   if ((((uintptr_t)dest | len) & (sizeof(long)-1)) == 0) {
     unsigned long word = byte & 0xFF;
@@ -59,7 +59,7 @@ void* memset(void* dest, int byte, size_t len)
   return dest;
 }
 
-size_t strlen(const char *s)
+size_t (strlen)(const char *s)
 {
   const char *p = s;
   while (*p)
@@ -67,7 +67,7 @@ size_t strlen(const char *s)
   return p - s;
 }
 
-int strcmp(const char* s1, const char* s2)
+int (strcmp)(const char* s1, const char* s2)
 {
   unsigned char c1, c2;
 
@@ -79,7 +79,7 @@ int strcmp(const char* s1, const char* s2)
   return c1 - c2;
 }
 
-char* strcpy(char* dest, const char* src)
+char* (strcpy)(char* dest, const char* src)
 {
   char* d = dest;
   while ((*d++ = *src++))
