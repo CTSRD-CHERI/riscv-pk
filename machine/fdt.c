@@ -146,14 +146,14 @@ int fdt_string_list_index(const struct fdt_scan_prop *prop, const char *str)
 
 void fdt_version_prop_print(const uint32_t * version_value, int version_len)
 {
-  const char *char_data = (char *)(version_value);
-  size_t char_len = version_len;
+  const char *char_data = (char *)version_value;
+  int char_len = version_len;
   if (!char_data) {
     char_data = "unknown";
     char_len = strlen(char_data) + 1;
   }
   // The size should be 1, but print any extra values if they appear
-  for (size_t i = 0; i < char_len; i += strlen(char_data + i) + 1) {
+  for (int i = 0; i < char_len; i += strlen(char_data + i) + 1) {
     if (i != 0)
       printm(", ");
     printm("%s", char_data + i);
@@ -265,7 +265,6 @@ void query_root(uintptr_t fdt)
   memset(&scan, 0, sizeof(scan));
   cb.open = root_open;
   cb.prop = root_prop;
-  cb.done = NULL;
   cb.close= root_close;
   cb.extra = &scan;
 
