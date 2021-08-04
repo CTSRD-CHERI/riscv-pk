@@ -246,6 +246,21 @@ static void hart_prop(const struct fdt_scan_prop *prop, void *extra)
     uint64_t reg;
     fdt_get_address(prop->node->parent, prop->value, &reg);
     scan->hart = reg;
+  } else if (!strcmp(prop->name, "sri-cambridge,version")) {
+    if (scan->cpu) {
+      printm("Hart %d version: ", scan->hart);
+    }
+    else {
+      printm("SoC version: ");
+    }
+    char *char_data = (char *)(prop->value);
+    // The size should be 1, but print any extra values if they appear
+    for (size_t i = 0; i < prop->len; i += strlen(char_data + i) + 1) {
+      if (i != 0)
+        printm(", ");
+      printm("%s", char_data + i);
+    }
+    printm("\r\n");
   }
 }
 
