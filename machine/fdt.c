@@ -144,6 +144,23 @@ int fdt_string_list_index(const struct fdt_scan_prop *prop, const char *str)
   return -1;
 }
 
+void fdt_version_prop_print(const uint32_t * version_value, int version_len)
+{
+  const char *char_data = (char *)(version_value);
+  size_t char_len = version_len;
+  if (!char_data) {
+    char_data = "unknown";
+    char_len = strlen(char_data) + 1;
+  }
+  // The size should be 1, but print any extra values if they appear
+  for (size_t i = 0; i < char_len; i += strlen(char_data + i) + 1) {
+    if (i != 0)
+      printm(", ");
+    printm("%s", char_data + i);
+  }
+  printm("\r\n");
+}
+
 //////////////////////////////////////////// MEMORY SCAN /////////////////////////////////////////
 
 struct mem_scan {
@@ -232,16 +249,9 @@ static void root_prop(const struct fdt_scan_prop *prop, void *extra)
 static int root_close(const struct fdt_scan_node *node, void *extra)
 {
   struct root_scan *scan = (struct root_scan *)extra;
-  if (scan->root && node == scan->root && scan->version_value) {
+  if (scan->root == node) {
     printm("SoC version: ");
-    char *char_data = (char *)(scan->version_value);
-    // The size should be 1, but print any extra values if they appear
-    for (size_t i = 0; i < scan->version_len; i += strlen(char_data + i) + 1) {
-      if (i != 0)
-        printm(", ");
-      printm("%s", char_data + i);
-    }
-    printm("\r\n");
+    fdt_version_prop_print(scan->version_value, scan->version_len);
   }
   return 0;
 }
@@ -320,17 +330,8 @@ static void hart_done(const struct fdt_scan_node *node, void *extra)
 
   if (scan->cpu == node) {
     assert (scan->hart >= 0);
-    if (scan->version_value) {
-      printm("Hart %d version: ", scan->hart);
-      char *char_data = (char *)(scan->version_value);
-      // The size should be 1, but print any extra values if they appear
-      for (size_t i = 0; i < scan->version_len; i += strlen(char_data + i) + 1) {
-        if (i != 0)
-          printm(", ");
-        printm("%s", char_data + i);
-      }
-      printm("\r\n");
-    }
+    printm("Hart %d version: ", scan->hart);
+    fdt_version_prop_print(scan->version_value, scan->version_len);
   }
 
   if (scan->controller == node && scan->cpu) {
