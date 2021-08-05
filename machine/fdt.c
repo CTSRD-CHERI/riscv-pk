@@ -144,14 +144,14 @@ int fdt_string_list_index(const struct fdt_scan_prop *prop, const char *str)
   return -1;
 }
 
-void fdt_version_prop_print(const uint32_t * version_value, int version_len)
+void fdt_version_prop_print(const uint32_t *version_value, int version_len)
 {
-  const char *char_data = (char *)version_value;
+  const char *char_data = (const char *)version_value;
   if (!char_data) {
     char_data = "unknown";
     version_len = strlen(char_data) + 1;
   }
-  // The size should be 1, but print any extra values if they appear
+  // There should only be one string, but print any extra strings if they appear
   for (int i = 0; i < version_len; i += strlen(char_data + i) + 1) {
     if (i != 0)
       printm(", ");
