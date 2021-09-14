@@ -344,6 +344,7 @@ static void prci_test()
 
 static void hart_plic_init()
 {
+	return;
   // clear pending interrupts
   *HLS()->ipi = 0;
   *HLS()->timecmp = -1ULL;
