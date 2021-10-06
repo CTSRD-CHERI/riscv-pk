@@ -80,6 +80,7 @@ static void delegate_traps()
   exceptions |= 1U << 0x1a; /* LOAD_CAP_PAGE_FAULT */
   exceptions |= 1U << 0x1b; /* STORE_CAP_PAGE_FAULT */
   exceptions |= 1U << 0x1c; /* CHERI exception */
+  exceptions |= 1U << 0x1d; /* CHERI version fault */
 #endif
 
   write_csr(mideleg, interrupts);
