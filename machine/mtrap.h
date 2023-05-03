@@ -3,6 +3,7 @@
 #ifndef _RISCV_MTRAP_H
 #define _RISCV_MTRAP_H
 
+#include "config.h"
 #include "encoding.h"
 
 #ifdef __riscv_atomic
@@ -50,11 +51,11 @@ typedef struct {
 
 #define MACHINE_STACK_TOP() ({ \
   uintptr_t sp = (uintptr_t)__builtin_frame_address(0) ; \
-  (char *)((sp + RISCV_PGSIZE) & -RISCV_PGSIZE); })
+  (char *)((sp + MACHINE_STACK_SIZE) & -MACHINE_STACK_SIZE); })
 
 // hart-local storage, at top of stack
 #define HLS() ((hls_t*)(MACHINE_STACK_TOP() - HLS_SIZE))
-#define OTHER_HLS(id) ((hls_t*)ptr_to_ddccap((char*)HLS() + RISCV_PGSIZE * ((id) - read_const_csr(mhartid))))
+#define OTHER_HLS(id) ((hls_t*)ptr_to_ddccap((char*)HLS() + MACHINE_STACK_SIZE * ((id) - read_const_csr(mhartid))))
 
 hls_t* hls_init(uintptr_t hart_id);
 void parse_config_string();
@@ -85,7 +86,12 @@ static inline void wfi()
 #define IPI_SFENCE_VMA 0x4
 #define IPI_HALT       0x8
 
+#ifdef PK_PRINT_DEVICE_TREE
+#define MACHINE_STACK_SIZE (2 * RISCV_PGSIZE)
+#else
 #define MACHINE_STACK_SIZE RISCV_PGSIZE
+#endif
+
 #define MENTRY_HLS_OFFSET (INTEGER_CONTEXT_SIZE + SOFT_FLOAT_CONTEXT_SIZE)
 #define MENTRY_FRAME_SIZE (MENTRY_HLS_OFFSET + HLS_SIZE)
 #define MENTRY_IPI_OFFSET (MENTRY_HLS_OFFSET)
