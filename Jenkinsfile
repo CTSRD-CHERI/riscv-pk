@@ -26,7 +26,7 @@ paramsArray.add(text(defaultValue: allArchitectures.join('\n'),
         name: 'architectures'))
 
 // Add a platform selector for manual builds
-def allPlatforms = ["fett", "gfe", "qemu"]
+def allPlatforms = ["gfe", "qemu"]
 paramsArray.add(text(defaultValue: allPlatforms.join('\n'),
         description: 'The platforms to build for (one per line)',
         name: 'platforms'))
