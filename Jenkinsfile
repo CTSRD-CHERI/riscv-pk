@@ -79,7 +79,7 @@ selectedArchitectures.each { architecture ->
                     // Delete stale compiler/sysroot
                     beforeBuild: { params ->
                         dir('cherisdk') { deleteDir() }
-                        sh label: 'Deleting outputs from previous builds', script: 'rm -fv bbl-*'
+                        sh label: 'Deleting outputs from previous builds', script: 'rm -rfv bbl-*'
                     },
                     afterBuild: { params -> maybeArchiveArtifacts(params, base, architecture) })
         }
