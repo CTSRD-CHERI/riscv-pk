@@ -505,6 +505,17 @@ do_reset:
 #else
   csrw mscratch, x0
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  # fixup endianness before making any loads or stores
+#if __riscv_xlen == 32
+  li t0, MSTATUSH_MBE
+  csrs CSR_MSTATUSH, t0
+#else
+  li t0, MSTATUS_MBE
+  csrs CSR_MSTATUS, t0
+#endif
+#endif
+
   # write mtvec and make sure it sticks
   la t0, trap_vector
   csrw mtvec, t0
@@ -521,6 +532,7 @@ do_reset:
 
   bnez a3, .LmultiHartInit
 
+#ifdef ZERO_BSS
   # Zero out BSS; linker script provides alignment and padding
 #if __has_feature(capabilities)
   cllc ct0, _fbss
@@ -538,6 +550,7 @@ do_reset:
   bne t0, t1, 1b
 #endif
 2:
+#endif
 
 #if __has_feature(capabilities)
   # Save a0/a1 with hartid/DTB from previous boot loader stage
@@ -590,12 +603,21 @@ do_reset:
   # make sure our hart id is within a valid range
   fence
   li a2, MAX_HARTS
-  bgeu a3, a2, 1f
+  bgeu a3, a2, .Lcont
   j init_other_hart
-1:
+.Lcont:
 #endif
   wfi
   j .LmultiHart
+
+#ifdef CUSTOM_DTS
+.section .dtb
+.align 3
+.global dtb_start, dtb_end
+dtb_start:
+.incbin "custom.dtb"
+dtb_end:
+#endif
 
   .bss
   .align RISCV_PGSHIFT

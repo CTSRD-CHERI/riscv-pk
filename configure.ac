@@ -96,6 +96,8 @@ LDFLAGS="$LDFLAGS -Wl,--build-id=none"
 
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
+AC_CHECK_LIB([gcc], [__ashldi3], AC_SUBST([LIBS], ["-lgcc"]), AC_SUBST([LIBS]))
+AC_CHECK_LIB([gcc], [__ashlti3], AC_SUBST([LIBS], ["-lgcc"]), AC_SUBST([LIBS]))
 AC_SUBST(WITH_ARCH)
 AC_SUBST(host_alias)
 
@@ -105,6 +107,11 @@ AC_ARG_WITH([mem-start], AS_HELP_STRING([--with-mem-start], [Set physical memory
   ], [
    AC_SUBST([MEM_START], [0x80000000], [Physical memory start address])
   ])
+
+AC_ARG_ENABLE([zero-bss], AS_HELP_STRING([--enable-zero-bss], [Manually zero out BSS when booting]))
+AS_IF([test "x$enable_zero_bss" = "xyes"], [
+  AC_DEFINE([ZERO_BSS],,[Define if BSS should be manually zeroed when booting])
+])
 
 #-------------------------------------------------------------------------
 # MCPPBS subproject list

@@ -7,6 +7,7 @@
 #include "fdt.h"
 #include "uart.h"
 #include "uart16550.h"
+#include "uart_litex.h"
 #include "finisher.h"
 #include "disabled_hart_mask.h"
 #include "htif.h"
@@ -26,7 +27,6 @@ void init_cap_globals(void)
 }
 #endif
 
-pte_t* root_page_table;
 uintptr_t mem_size;
 volatile uint64_t* mtime;
 volatile uint32_t* plic_priorities;
@@ -37,6 +37,19 @@ void* kernel_end;
 static void mstatus_init()
 {
   unsigned long mstatus = 0;
+#if __riscv_xlen == 32
+  uint32_t mstatush = 0;
+#endif
+
+  // Set endianness
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#if __riscv_xlen == 32
+  mstatush |= MSTATUSH_SBE | MSTATUSH_MBE;
+#else
+  mstatus |= MSTATUS_SBE | MSTATUS_MBE;
+#endif
+  mstatus |= MSTATUS_UBE;
+#endif
 
   // Enable FPU
   if (supports_extension('F'))
@@ -47,6 +60,9 @@ static void mstatus_init()
     mstatus |= MSTATUS_VS;
 
   write_csr(mstatus, mstatus);
+#if __riscv_xlen == 32 && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  write_csr(0x310, mstatush); /* mstatush is not known to gas */
+#endif
 
   // Enable user/supervisor use of perf counters
   if (supports_extension('S'))
@@ -84,7 +100,7 @@ static void delegate_traps()
 
   write_csr(mideleg, interrupts);
   write_csr(medeleg, exceptions);
-  assert(read_csr(mideleg) == interrupts);
+  assert((read_csr(mideleg) & interrupts) == interrupts);
   assert(read_csr(medeleg) == exceptions);
 }
 
@@ -379,6 +395,7 @@ void init_first_hart(uintptr_t hartid, uintptr_t dtb)
   // Confirm console as early as possible
   query_uart(dtb);
   query_uart16550(dtb);
+  query_uart_litex(dtb);
   query_htif(dtb);
   printm("bbl loader\r\n");
 
@@ -444,7 +461,7 @@ void enter_supervisor_mode(void (*fn)(uintptr_t), uintptr_t arg0, uintptr_t arg1
   write_csr(mstatus, mstatus);
   write_csr(mscratch, MACHINE_STACK_TOP() - MENTRY_FRAME_SIZE);
 #ifndef __riscv_flen
-  uintptr_t *p_fcsr = MACHINE_STACK_TOP() - MENTRY_FRAME_SIZE; // the x0's save slot
+  uintptr_t *p_fcsr = (uintptr_t*)(MACHINE_STACK_TOP() - MENTRY_FRAME_SIZE); // the x0's save slot
   *p_fcsr = 0;
 #endif
   write_csr(mepc, fn);

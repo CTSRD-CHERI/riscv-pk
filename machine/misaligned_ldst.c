@@ -10,6 +10,7 @@
 union byte_array {
   uint8_t bytes[8];
   uintptr_t intx;
+  uint32_t int32;
   uint64_t int64;
 };
 
@@ -73,11 +74,15 @@ void misaligned_load_trap(uintptr_t* regs, uintptr_t mcause, uintptr_t mepc)
     val.bytes[i] = load_uint8_t((void *)(addr + i), mepc);
 
   if (!fp)
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     SET_RD(insn, regs, (long)val.intx << shift >> shift);
+#else
+    SET_RD(insn, regs, (long)val.intx >> shift);
+#endif
   else if (len == 8)
     SET_F64_RD(insn, regs, val.int64);
   else
-    SET_F32_RD(insn, regs, val.intx);
+    SET_F32_RD(insn, regs, val.int32);
 
 #if __has_feature(capabilities)
   write_scr(mepcc, npc);
@@ -138,8 +143,13 @@ void misaligned_store_trap(uintptr_t* regs, uintptr_t mcause, uintptr_t mepc)
     return redirect_trap(mepc, mstatus, addr);
   }
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  intptr_t offs = (len == 8? 0 : sizeof(val.intx) - len);
+#else
+  intptr_t offs = 0;
+#endif
   for (int i = 0; i < len; i++)
-    store_uint8_t((void *)(addr + i), val.bytes[i], mepc);
+    store_uint8_t((void *)(addr + i), val.bytes[offs + i], mepc);
 
 #if __has_feature(capabilities)
   write_scr(mepcc, npc);
