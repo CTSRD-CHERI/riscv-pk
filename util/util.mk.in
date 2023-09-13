@@ -5,7 +5,9 @@ util_subproject_deps = \
 util_hdrs = \
 
 util_c_srcs = \
+  divdi3.c \
   snprintf.c \
   string.c \
+  udivmoddi4.c \
 
 util_asm_srcs = \
