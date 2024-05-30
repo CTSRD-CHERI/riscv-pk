@@ -155,6 +155,8 @@ static void hpm_init()
 #define EVENT_CAP_LOAD               0x1a
 #define EVENT_CAP_STORE              0x1b
 
+#define EVENT_PTID_CHANGE	     0x1f
+
 #define EVENT_ITLB_MISS              0x2a
 #define EVENT_ICACHE_LOAD            0x20
 #define EVENT_ICACHE_LOAD_MISS       0x21
@@ -178,6 +180,9 @@ static void hpm_init()
 #define EVENT_TAGCACHE_STORE         0x40
 #define EVENT_TAGCACHE_STORE_MISS    0x41
 #define EVENT_TAGCACHE_EVICT         0x44
+
+#define EVENT_COMP_EVICTION	     0x73
+#define EVENT_COMP_HIT		     0x74
 
 // TODO have those derived from a config file? What's an appropriate mechanism?
 #define EVENT_3  EVENT_REDIRECT
