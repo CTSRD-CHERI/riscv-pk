@@ -212,6 +212,8 @@ static void hpm_init()
 #define EVENT_27 EVENT_LLCACHE_EVICT
 #define EVENT_28 EVENT_TAGCACHE_STORE_MISS
 #define EVENT_29 EVENT_TAGCACHE_EVICT
+#define EVENT_30 EVENT_PTID_CHANGE
+#define EVENT_31 EVENT_COMP_EVICTION
 
   asm volatile (// handle trap on implementations not supporting HPM CSRs
 #if __has_feature(capabilities)
@@ -279,6 +281,10 @@ static void hpm_init()
                 "csrw mhpmevent28, t0\n\t"
                 "li t0, " STR(EVENT_29) "\n\t"
                 "csrw mhpmevent29, t0\n\t"
+                "li t0, " STR(EVENT_30) "\n\t"
+                "csrw mhpmevent30, t0\n\t"
+                "li t0, " STR(EVENT_31) "\n\t"
+                "csrw mhpmevent31, t0\n\t"
                 // initialize all counters to 0
                 "li t0, 0\n\t"
                 "csrw mhpmcounter3, t0\n\t"
@@ -308,6 +314,8 @@ static void hpm_init()
                 "csrw mhpmcounter27, t0\n\t"
                 "csrw mhpmcounter28, t0\n\t"
                 "csrw mhpmcounter29, t0\n\t"
+                "csrw mhpmcounter30, t0\n\t"
+                "csrw mhpmcounter31, t0\n\t"
                 // bitmask in t0
                 "li t0, 0xfffffff8\n\t"
                 // enable user access -- questionable practice here...
