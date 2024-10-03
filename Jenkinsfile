@@ -41,12 +41,12 @@ def maybeArchiveArtifacts(params, String base, String architecture) {
     if (GlobalVars.archiveArtifacts) {
         stage("Archiving artifacts") {
             sh """
-cp tarball/opt/${base}-baremetal-${architecture}/bbl ${base}-${architecture}
+cp tarball/opt/baremetal-${architecture}/bbl ${base}-${architecture}
 """
             archiveArtifacts allowEmptyArchive: false, artifacts: "${base}-${architecture}", fingerprint: true, onlyIfSuccessful: true
             if (base == "bbl" && architecture == "riscv64-purecap") {
                 sh """
-cp tarball/opt/${base}-baremetal-${architecture}/share/qemu/*.bin ./
+cp tarball/opt/native/share/qemu/*.bin ./
 """
                 archiveArtifacts allowEmptyArchive: false, artifacts: "*.bin", fingerprint: true, onlyIfSuccessful: true
 
