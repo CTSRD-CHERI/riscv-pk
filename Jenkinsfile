@@ -41,12 +41,12 @@ def maybeArchiveArtifacts(params, String base, String architecture) {
     if (GlobalVars.archiveArtifacts) {
         stage("Archiving artifacts") {
             sh """
-cp tarball/opt/baremetal-${architecture}/bbl ${base}-${architecture}
+cp tarball/bbl ${base}-${architecture}
 """
             archiveArtifacts allowEmptyArchive: false, artifacts: "${base}-${architecture}", fingerprint: true, onlyIfSuccessful: true
             if (base == "bbl" && architecture == "riscv64-purecap") {
                 sh """
-cp tarball/opt/native/share/qemu/*.bin ./
+cp tarball/share/qemu/*.bin ./
 """
                 archiveArtifacts allowEmptyArchive: false, artifacts: "*.bin", fingerprint: true, onlyIfSuccessful: true
 
@@ -76,6 +76,7 @@ selectedArchitectures.each { architecture ->
                     skipArchiving: true, skipTarball: true,
                     sdkCompilerOnly: true,
                     gitHubStatusContext: "ci/${jobName}",
+                    extraArgs: "--install-prefix=/",
                     // Delete stale compiler/sysroot
                     beforeBuild: { params ->
                         dir('cherisdk') { deleteDir() }
