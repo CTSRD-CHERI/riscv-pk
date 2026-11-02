@@ -452,26 +452,39 @@ void setup_pmp(void)
 #endif
 }
 
-#if !__has_feature(capabilities)
 void enter_supervisor_mode(void (*fn)(uintptr_t), uintptr_t arg0, uintptr_t arg1)
 {
-  uintptr_t mstatus = read_csr(mstatus);
+  unsigned long mstatus = read_csr(mstatus);
   mstatus = INSERT_FIELD(mstatus, MSTATUS_MPP, PRV_S);
   mstatus = INSERT_FIELD(mstatus, MSTATUS_MPIE, 0);
   write_csr(mstatus, mstatus);
+#if __has_feature(capabilities)
+  write_scr(mscratchc, MACHINE_STACK_TOP() - MENTRY_FRAME_SIZE);
+#else
   write_csr(mscratch, MACHINE_STACK_TOP() - MENTRY_FRAME_SIZE);
+#endif
 #ifndef __riscv_flen
   uintptr_t *p_fcsr = (uintptr_t*)(MACHINE_STACK_TOP() - MENTRY_FRAME_SIZE); // the x0's save slot
   *p_fcsr = 0;
 #endif
+#if __has_feature(capabilities)
+  // Rederive full-permissions mepcc
+  write_scr(mepcc, __builtin_cheri_flags_set(ptr_to_ddccap(fn), 0));
+#else
   write_csr(mepc, fn);
+#endif
 
+#if __has_feature(capabilities)
+  register uintptr_t a0 asm ("ca0") = arg0;
+  register uintptr_t a1 asm ("ca1") = arg1;
+  asm volatile ("mret" : : "C" (a0), "C" (a1));
+#else
   register uintptr_t a0 asm ("a0") = arg0;
   register uintptr_t a1 asm ("a1") = arg1;
   asm volatile ("mret" : : "r" (a0), "r" (a1));
+#endif
   __builtin_unreachable();
 }
-#endif
 
 void enter_machine_mode(void (*fn)(uintptr_t, uintptr_t), uintptr_t arg0, uintptr_t arg1)
 {

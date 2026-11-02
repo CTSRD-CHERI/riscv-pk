@@ -396,40 +396,6 @@ __trap_from_machine_mode:
 .size __trap_from_machine_mode, . - __trap_from_machine_mode
 
 #if __has_feature(capabilities)
-  .globl enter_supervisor_mode
-  .type enter_supervisor_mode, @function
-enter_supervisor_mode:
-  # Reset mstatus
-  csrr t0, mstatus
-  li t1, ~(MSTATUS_MPP | MSTATUS_MPIE)
-  and t0, t0, t1
-  li t1, PRV_S << 11
-  or t0, t0, t1
-  csrw mstatus, t0
-
-  # Reset mscratchc
-  li t0, MACHINE_STACK_SIZE - MENTRY_FRAME_SIZE
-  csetoffset csp, csp, t0
-  cspecialw mscratchc, csp
-
-#ifndef __riscv_flen
-  csd x0, (csp) # Zero x0's save slot.
-#endif
-
-  # Rederive full-permissions mepcc
-  cspecialr ct0, ddc
-  csetoffset ca0, ct0, a0
-  csetflags ca0, ca0, x0
-  cspecialw mepcc, ca0
-
-  # Set arguments and return
-  cmove ca0, ca1
-  cmove ca1, ca2
-  mret
-  .size enter_supervisor_mode, . - enter_supervisor_mode
-#endif
-
-#if __has_feature(capabilities)
   .option nocapmode
 #endif
 do_reset:
