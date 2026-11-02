@@ -104,6 +104,52 @@ static void delegate_traps()
   assert(read_csr(medeleg) == exceptions);
 }
 
+static void setup_menvcfg(void)
+{
+  // Set up hart to allow all the privileged extensions we know about.
+  // Ignore the illegal-instruction trap if menvcfg isn't supported.
+  // Rely on WARL behaviour so we don't need to detect each extension.
+  // Somewhat lazy but avoids needing to import a proper ISA string parser.
+  uint64_t menvcfg =
+    INSERT_FIELD(0, MENVCFG_CBIE, CBIE_EXEC_INVAL) |
+    MENVCFG_CBCFE |
+    MENVCFG_CBZE |
+#if __riscv_xlen > 32 && !defined(__riscv_xcheri)
+    MENVCFG_PBMTE |
+#endif
+    MENVCFG_STCE;
+  asm volatile (
+#if __has_feature(capabilities)
+                "cllc ct0, 1f\n\t"
+                "cspecialrw ct0, mtcc, ct0\n\t"
+#else
+                "la t0, 1f\n\t"
+                "csrrw t0, mtvec, t0\n\t"
+#endif
+                "csrw menvcfg, %0\n\t"
+#if __riscv_xlen == 32
+                "csrw menvcfgh, %1\n\t"
+#endif
+                ".align 2\n\t"
+                "1:\n\t"
+#if __has_feature(capabilities)
+                "cspecialw mtcc, ct0"
+#else
+                "csrw mtvec, t0"
+#endif
+                : : "r" ((unsigned long)menvcfg)
+#if __riscv_xlen == 32
+                , "r" ((unsigned long)(menvcfg >> 32))
+#endif
+                :
+#if __has_feature(capabilities)
+                "ct0"
+#else
+                "t0"
+#endif
+                );
+}
+
 static void fp_init()
 {
   if (!supports_extension('F'))
@@ -335,6 +381,7 @@ static void hart_init()
   hpm_init();
 #ifndef BBL_BOOT_MACHINE
   delegate_traps();
+  setup_menvcfg();
 #endif /* BBL_BOOT_MACHINE */
   setup_pmp();
 }
